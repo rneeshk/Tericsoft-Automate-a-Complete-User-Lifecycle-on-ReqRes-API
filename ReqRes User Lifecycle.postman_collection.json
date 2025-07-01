@@ -1,0 +1,308 @@
+{
+	"info": {
+		"_postman_id": "5e164a5b-8955-465a-8185-e2abebe63332",
+		"name": "ReqRes User Lifecycle",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "38661249"
+	},
+	"item": [
+		{
+			"name": "Create User",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Parse the response body from JSON string to a JavaScript object\r",
+							"const responseJson = pm.response.json();\r",
+							"\r",
+							"// Test 1: Validate the status code is 201 (Created)\r",
+							"pm.test(\"Status code is 201\", function () {\r",
+							"    pm.response.to.have.status(201);\r",
+							"});\r",
+							"\r",
+							"// Test 2: Validate the response body contains 'id' and 'createdAt'\r",
+							"pm.test(\"Response body contains id and createdAt\", function () {\r",
+							"    pm.expect(responseJson).to.have.property(\"id\");\r",
+							"    pm.expect(responseJson).to.have.property(\"createdAt\");\r",
+							"});\r",
+							"\r",
+							"// Test 3: Validate the name and job in the response match what was sent\r",
+							"pm.test(\"Name and job in response match the request\", function () {\r",
+							"    // We can't directly access the dynamic variables used in the body, but we can check that the response values are not null or empty.\r",
+							"    pm.expect(responseJson.name).to.not.be.empty;\r",
+							"    pm.expect(responseJson.job).to.not.be.empty;\r",
+							"});\r",
+							"\r",
+							"// Test 4: Validate the response structure using JSON Schema\r",
+							"pm.test(\"Response body structure is valid\", function () {\r",
+							"    const schema = {\r",
+							"        \"type\": \"object\",\r",
+							"        \"properties\": {\r",
+							"            \"name\": { \"type\": \"string\" },\r",
+							"            \"job\": { \"type\": \"string\" },\r",
+							"            \"id\": { \"type\": \"string\" },\r",
+							"            \"createdAt\": {\r",
+							"                \"type\": \"string\",\r",
+							"                \"format\": \"date-time\" // Validates it's a timestamp string\r",
+							"            }\r",
+							"        },\r",
+							"        \"required\": [\"name\", \"job\", \"id\", \"createdAt\"]\r",
+							"    };\r",
+							"    pm.response.to.have.jsonSchema(schema);\r",
+							"});\r",
+							"// Save the 'id' from the response to a collection variable for the next requests\r",
+							"pm.collectionVariables.set(\"userId\", responseJson.id);\r",
+							"console.log(\"New User ID saved: \" + pm.collectionVariables.get(\"userId\"));"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"name\": \"{{$randomFullName}}\",\r\n    \"job\": \"{{$randomJobTitle}}\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/users",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"users"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Update User",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"const responseJson = pm.response.json();\r",
+							"\r",
+							"// Test 1: Validate the status code is 200 (OK)\r",
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"// Test 2: Validate the response body has an 'updatedAt' field\r",
+							"pm.test(\"Response contains 'updatedAt' timestamp\", function () {\r",
+							"    pm.expect(responseJson).to.have.property(\"updatedAt\");\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"name\": \"{{$randomFullName}}\",\r\n    \"job\": \"{{$randomJobTitle}}\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/users/{{userId}}",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"users",
+						"{{userId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get User",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"const responseJson = pm.response.json();\r",
+							"\r",
+							"// Test 1: Validate the status code is 200 (OK)\r",
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"// Test 2: Validate the user data is correct for user ID 2\r",
+							"pm.test(\"User data for ID 2 is correct\", function () {\r",
+							"    pm.expect(responseJson.data.id).to.eql(2);\r",
+							"    pm.expect(responseJson.data.email).to.eql(\"janet.weaver@reqres.in\");\r",
+							"    pm.expect(responseJson.data.first_name).to.eql(\"Janet\");\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/api/users/2",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"users",
+						"2"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete User",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Test 1: Validate the status code is 204 (No Content)\r",
+							"pm.test(\"Status code is 204 No Content\", function () {\r",
+							"    pm.response.to.have.status(204);\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/api/users/{{userId}}",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"users",
+						"{{userId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "NEGATIVE - Get Non-Existent User",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Test 1: Validate the status code is 404 (Not Found)\r",
+							"pm.test(\"Status code is 404 Not Found\", function () {\r",
+							"    pm.response.to.have.status(404);\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/api/users/99999",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"users",
+						"99999"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"auth": {
+		"type": "apikey",
+		"apikey": [
+			{
+				"key": "value",
+				"value": "{{apiKey}}",
+				"type": "string"
+			},
+			{
+				"key": "in",
+				"value": "header",
+				"type": "string"
+			},
+			{
+				"key": "key",
+				"value": "x-api-key",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "userId",
+			"value": ""
+		}
+	]
+}
